@@ -1,0 +1,11 @@
+{
+  "name": "elevators-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1",
+    "lint": "powershell -ExecutionPolicy Bypass -File ./scripts/lint.ps1"
+  }
+}

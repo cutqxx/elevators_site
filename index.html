@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ООО "ЛифтКомплект"</title>
+    <meta
+      name="description"
+      content="Современные лифтовые решения для жилых и коммерческих объектов. Оставьте заявку о проблемах в лифтовом оборудовании"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__backdrop"></div>
+      <div class="container hero__layout">
+        <section class="hero__content" aria-labelledby="hero-title">
+          <p class="eyebrow">ООО "ЛифтКомплект"</p>
+          <h2 id="hero-title">Возникла проблема с лифтом?</h2>
+          <p class="hero__lead">
+            Оставьте заявку — мы оперативно примем меры 
+          </p>
+
+          <ul class="hero__metrics" aria-label="Преимущества компании">
+            <li>
+              <strong>менее 1 часа</strong>
+              <span>на отклик по заявке</span>
+            </li>
+            <li>
+              <strong>Безопасно</strong>
+              <span>подскажем, что делать, если вы застряли в лифте</span>
+            </li>
+            <li>
+              <strong>Без лишних действий</strong>
+              <span>примем заявку и передадим её в обслуживание</span>
+            </li>
+          </ul>
+        </section>
+
+        <aside class="lead-card" id="form" aria-labelledby="form-title">
+          <p class="lead-card__eyebrow">Заявка на ремонт</p>
+          <!-- <h2 id="form-title">Оставьте заявку и мы проработаем ее</h2> -->
+          <p class="lead-card__text">
+            С вами может связаться диспетчер для уточнения деталей
+          </p>
+
+          <form class="lead-form" id="lead-form" novalidate>
+            <div class="form-field">
+              <label for="name">Имя</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                placeholder="Как к вам обращаться"
+                minlength="2"
+                maxlength="50"
+                required
+              />
+              <p class="form-field__error" id="name-error" aria-live="polite"></p>
+            </div>
+
+            <div class="form-field">
+              <label for="address">Адрес</label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                autocomplete="street-address"
+                placeholder="улица, дом"
+                minlength="5"
+                maxlength="120"
+                required
+              />
+              <p class="form-field__error" id="address-error" aria-live="polite"></p>
+            </div>
+
+            <div class="form-field">
+              <label for="issue">Описание проблемы</label>
+              <input
+                id="issue"
+                name="issue"
+                type="text"
+                placeholder="Что именно произошло с лифтом"
+                minlength="5"
+                maxlength="200"
+                required
+              />
+              <p class="form-field__error" id="issue-error" aria-live="polite"></p>
+            </div>
+
+            <div class="form-field">
+              <label for="phone">Номер телефона</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                inputmode="tel"
+                placeholder="+79 (___) ___-__-__"
+                required
+              />
+              <p class="form-field__hint">Только мобильный номер в формате, начинающемся с +79</p>
+              <p class="form-field__error" id="phone-error" aria-live="polite"></p>
+            </div>
+
+            <button class="lead-form__submit" type="submit" disabled>Отправить</button>
+            <p class="lead-form__status" id="form-status" aria-live="polite" data-state="idle"></p>
+          </form>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+  <section class="company" id="about" aria-labelledby="company-title">
+    <div class="container company__layout">
+      <div class="company__intro">
+        <p class="eyebrow">О компании</p>
+        <h2 id="company-title">Более 15 лет работаем с лифтовым оборудованием в Нефтеюганске</h2>
+        <p>
+          ООО «ЛифтКомплект» — компания из Нефтеюганска, которая с 2007 года занимается
+          поставкой, монтажом, модернизацией и сопровождением лифтового оборудования.
+          Работаем с жилыми, коммерческими и другими объектами, где важны надёжность,
+          понятные сроки и аккуратная организация работ.
+        </p>
+      </div>
+
+      <div class="company__cards" id="services">
+        <article class="info-card">
+          <h3>Что делаем</h3>
+          <p>
+            Поставляем оборудование, выполняем монтажные и строительно-монтажные работы,
+            обновляем отдельные узлы и помогаем поддерживать лифтовые системы в рабочем состоянии.
+          </p>
+        </article>
+
+        <article class="info-card">
+          <h3>С кем работаем</h3>
+          <p>
+            Сотрудничаем с жилыми домами, управляющими организациями, коммерческими объектами
+            и другими заказчиками, которым требуется надёжная работа подъёмного оборудования.
+          </p>
+        </article>
+
+        <article class="info-card">
+          <h3>Как строим работу</h3>
+          <p>
+            Изучаем задачу, выезжаем на объект, подбираем решение под технические вводные
+            и сопровождаем работы до результата, чтобы заказчик понимал каждый этап.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+    </main>
+
+    <footer class="footer" id="contacts">
+      <div class="container footer__layout">
+        <div class="footer__col">
+          <p class="footer__title">Контакты</p>
+          <p class="footer__text">Телефон: <a href="tel:+73463270790">+7 (3463) 27-07-90</a></p>
+          <p class="footer__text">Email: <a href="mailto:liftkomplekt07@mail.ru">liftkomplekt07@mail.ru</a></p>
+          <p class="footer__text">
+            Адрес: г. Нефтеюганск, 15-й микрорайон, д. 2
+          </p>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <div class="container">
+          <p>
+            © 2007–2026 ООО «ЛифтКомплект»
+            ИНН 8604041220 · ОГРН 1078604001618
+          </p>
+        </div>
+      </div>
+    </footer>
+    <script src="./script.js"></script>
+  </body>
+</html>
