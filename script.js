@@ -3,6 +3,7 @@ const nameInput = document.querySelector("#name");
 const addressInput = document.querySelector("#address");
 const issueInput = document.querySelector("#issue");
 const phoneInput = document.querySelector("#phone");
+const websiteInput = document.querySelector("#website");
 const submitButton = document.querySelector(".lead-form__submit");
 const statusElement = document.querySelector("#form-status");
 const defaultSubmitLabel = "Отправить";
@@ -295,7 +296,8 @@ form.addEventListener("submit", async (event) => {
         name: nameInput.value.trim(),
         address: addressInput.value.trim(),
         issue: issueInput.value.trim(),
-        phone: phoneInput.value.trim()
+        phone: phoneInput.value.trim(),
+        website: websiteInput.value
       })
     });
 

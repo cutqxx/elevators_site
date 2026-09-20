@@ -51,6 +51,17 @@
           </p>
 
           <form class="lead-form" id="lead-form" novalidate>
+            <div class="form-field form-field--honeypot" aria-hidden="true">
+              <label for="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
             <div class="form-field">
               <label for="name">Имя</label>
               <input
