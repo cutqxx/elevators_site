@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer";
+
 const NAME_MIN_LENGTH = 2;
 const NAME_MAX_LENGTH = 50;
 const ADDRESS_MIN_LENGTH = 5;
@@ -5,6 +7,11 @@ const ADDRESS_MAX_LENGTH = 120;
 const ISSUE_MIN_LENGTH = 5;
 const ISSUE_MAX_LENGTH = 200;
 const PHONE_PATTERN = /^79\d{9}$/;
+
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_MAX_ENTRIES = 5000;
+const rateLimitStore = new Map();
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
@@ -81,15 +88,106 @@ function validateLead(payload) {
   };
 }
 
-async function sendLeadEmail(lead) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.LEAD_TO_EMAIL;
-  const from = process.env.LEAD_FROM_EMAIL;
+// Скрытое поле-приманка для ботов: обычные пользователи его не видят и не заполняют.
+function isHoneypotTriggered(payload) {
+  return typeof payload?.website === "string" && payload.website.trim() !== "";
+}
 
-  if (!apiKey || !to || !from) {
-    throw new Error("SERVER_ENV_MISSING");
+function getClientIp(request) {
+  const trustProxy = process.env.TRUST_PROXY === "1" || Boolean(process.env.VERCEL);
+  const forwardedFor = request.headers?.["x-forwarded-for"];
+
+  if (trustProxy && typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
   }
 
+  return request.ip || request.socket?.remoteAddress || "unknown";
+}
+
+function pruneRateLimitStore(now) {
+  if (rateLimitStore.size <= RATE_LIMIT_MAX_ENTRIES) {
+    return;
+  }
+
+  for (const [key, value] of rateLimitStore) {
+    if (now > value.resetAt) {
+      rateLimitStore.delete(key);
+    }
+  }
+}
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    pruneRateLimitStore(now);
+    return { allowed: true };
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, retryAfterSeconds: Math.ceil((entry.resetAt - now) / 1000) };
+  }
+
+  entry.count += 1;
+  return { allowed: true };
+}
+
+function isOriginAllowed(request) {
+  const allowedOrigin = process.env.ALLOWED_ORIGIN;
+
+  if (!allowedOrigin) {
+    return true;
+  }
+
+  const origin = request.headers?.origin;
+
+  if (!origin) {
+    return true;
+  }
+
+  return origin === allowedOrigin;
+}
+
+let cachedTransporter = null;
+
+function getTransporter() {
+  if (cachedTransporter) {
+    return cachedTransporter;
+  }
+
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) {
+    return null;
+  }
+
+  const secure = process.env.SMTP_SECURE === "true" || port === 465;
+
+  cachedTransporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass }
+  });
+
+  return cachedTransporter;
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildLeadEmail(lead) {
   const sentAt = new Intl.DateTimeFormat("ru-RU", {
     dateStyle: "full",
     timeStyle: "medium",
@@ -107,34 +205,38 @@ async function sendLeadEmail(lead) {
     </div>
   `;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: "Новая заявка с сайта",
-      html,
-      reply_to: process.env.LEAD_REPLY_TO_EMAIL || undefined
-    })
-  });
+  const text = [
+    "Новая заявка с сайта",
+    `Имя: ${lead.name}`,
+    `Адрес: ${lead.address}`,
+    `Описание проблемы: ${lead.issue}`,
+    `Номер телефона: +${lead.phone}`,
+    `Дата и время отправки: ${sentAt}`
+  ].join("\n");
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`EMAIL_SEND_FAILED:${errorText}`);
-  }
+  return { html, text };
 }
 
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+async function sendLeadEmail(lead) {
+  const to = process.env.LEAD_TO_EMAIL;
+  const from = process.env.LEAD_FROM_EMAIL;
+  const replyTo = process.env.LEAD_REPLY_TO_EMAIL || undefined;
+  const transporter = getTransporter();
+
+  if (!transporter || !to || !from) {
+    throw new Error("SERVER_ENV_MISSING");
+  }
+
+  const { html, text } = buildLeadEmail(lead);
+
+  await transporter.sendMail({
+    from,
+    to,
+    replyTo,
+    subject: "Новая заявка с сайта",
+    html,
+    text
+  });
 }
 
 export default async function handler(request, response) {
@@ -143,7 +245,28 @@ export default async function handler(request, response) {
     return response.status(405).json({ message: "Метод не поддерживается" });
   }
 
+  if (!isOriginAllowed(request)) {
+    return response.status(403).json({ message: "Запрос отклонён" });
+  }
+
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(ip);
+
+  if (!rateLimit.allowed) {
+    response.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    return response.status(429).json({
+      message: "Слишком много заявок с вашего адреса. Попробуйте немного позже."
+    });
+  }
+
   const { isValid, errors, data } = validateLead(request.body);
+
+  if (isHoneypotTriggered(request.body)) {
+    // Ботам возвращаем правдоподобный успех, письмо не отправляем.
+    return response.status(200).json({
+      message: "Заявка отправлена. Мы свяжемся с вами в ближайшее время."
+    });
+  }
 
   if (!isValid) {
     return response.status(400).json({
@@ -159,64 +282,16 @@ export default async function handler(request, response) {
       message: "Заявка отправлена. Мы свяжемся с вами в ближайшее время."
     });
   } catch (error) {
+    console.error("Lead email send failed", error);
+
     if (error instanceof Error && error.message === "SERVER_ENV_MISSING") {
       return response.status(500).json({
         message: "Сервис временно недоступен. Попробуйте отправить заявку позже."
       });
     }
 
-    const providerMessage = getProviderMessage(error);
-
-    if (providerMessage) {
-      return response.status(providerMessage.status).json({
-        message: providerMessage.message
-      });
-    }
-
-    console.error("Lead email send failed", error);
-
     return response.status(502).json({
       message: "Не удалось отправить заявку. Попробуйте ещё раз немного позже."
     });
   }
-}
-
-function getProviderMessage(error) {
-  if (!(error instanceof Error) || !error.message.startsWith("EMAIL_SEND_FAILED:")) {
-    return null;
-  }
-
-  const rawMessage = error.message.replace("EMAIL_SEND_FAILED:", "");
-
-  try {
-    const parsed = JSON.parse(rawMessage);
-    const providerText = typeof parsed.message === "string" ? parsed.message : "";
-
-    if (providerText.includes("testing emails to your own email address")) {
-      return {
-        status: 502,
-        message:
-          "Для тестового адреса отправителя Resend можно отправлять письма только на email владельца аккаунта. Укажите основной email аккаунта в LEAD_TO_EMAIL или подключите свой домен."
-      };
-    }
-
-    if (providerText.includes("API key is invalid")) {
-      return {
-        status: 500,
-        message: "Указан неверный ключ RESEND_API_KEY. Проверьте значение в файле .env."
-      };
-    }
-
-    if (providerText.includes("verify a domain")) {
-      return {
-        status: 502,
-        message:
-          "Resend требует подтверждённый домен отправителя. Подключите домен в Resend и используйте адрес вида name@your-domain.ru."
-      };
-    }
-  } catch (parseError) {
-    console.error("Failed to parse email provider error", parseError);
-  }
-
-  return null;
 }

@@ -19,6 +19,8 @@ const mimeTypes = {
 };
 
 const server = createServer(async (request, response) => {
+  applySecurityHeaders(response);
+
   try {
     const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
 
@@ -44,13 +46,34 @@ server.listen(port, () => {
   console.log(`Локальный сервер запущен: http://localhost:${port}`);
 });
 
+function applySecurityHeaders(response) {
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("X-Frame-Options", "DENY");
+  response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+}
+
+const MAX_BODY_BYTES = 10 * 1024;
+
 async function handleLeadRequest(request, response) {
-  const body = await readJsonBody(request);
+  let body;
+
+  try {
+    body = await readJsonBody(request);
+  } catch (error) {
+    if (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE") {
+      response.writeHead(413, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ message: "Слишком большой запрос" }));
+      return;
+    }
+
+    throw error;
+  }
 
   const apiRequest = {
     body,
     headers: request.headers,
-    method: request.method
+    method: request.method,
+    socket: request.socket
   };
 
   const apiResponse = createJsonResponse(response);
@@ -59,8 +82,15 @@ async function handleLeadRequest(request, response) {
 
 async function readJsonBody(request) {
   const chunks = [];
+  let totalBytes = 0;
 
   for await (const chunk of request) {
+    totalBytes += chunk.length;
+
+    if (totalBytes > MAX_BODY_BYTES) {
+      throw new Error("PAYLOAD_TOO_LARGE");
+    }
+
     chunks.push(chunk);
   }
 
