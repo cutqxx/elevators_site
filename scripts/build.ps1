@@ -15,6 +15,7 @@ $filesToCopy = @(
   "index.html",
   "styles.css",
   "script.js",
+  "pico.min.css",
   ".env.example"
 )
 
@@ -22,6 +23,7 @@ foreach ($file in $filesToCopy) {
   Copy-Item -LiteralPath (Join-Path $root $file) -Destination $dist
 }
 
+Copy-Item -LiteralPath (Join-Path $root "fonts") -Destination (Join-Path $dist "fonts") -Recurse
 Copy-Item -LiteralPath (Join-Path $root "api\\lead.js") -Destination $apiDist
 
 Write-Host "Build completed: files copied to dist/"
