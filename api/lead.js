@@ -45,6 +45,7 @@ function validateLead(payload) {
   const address = normalizeText(payload?.address);
   const issue = normalizeText(payload?.issue);
   const phone = normalizePhone(payload?.phone);
+  const consent = payload?.consent === true;
 
   if (!name) {
     errors.name = "Укажите имя";
@@ -76,13 +77,18 @@ function validateLead(payload) {
     errors.phone = "Введите корректный номер телефона в формате +79";
   }
 
+  if (!consent) {
+    errors.consent = "Необходимо согласие на обработку персональных данных";
+  }
+
   return {
     errors,
     data: {
       name,
       address,
       issue,
-      phone
+      phone,
+      consent
     },
     isValid: Object.keys(errors).length === 0
   };
@@ -201,6 +207,7 @@ function buildLeadEmail(lead) {
       <p><strong>Адрес:</strong> ${escapeHtml(lead.address)}</p>
       <p><strong>Описание проблемы:</strong> ${escapeHtml(lead.issue)}</p>
       <p><strong>Номер телефона:</strong> ${escapeHtml(`+${lead.phone}`)}</p>
+      <p><strong>Согласие на обработку персональных данных:</strong> получено, ${escapeHtml(sentAt)}</p>
       <p><strong>Дата и время отправки:</strong> ${escapeHtml(sentAt)}</p>
     </div>
   `;
@@ -211,6 +218,7 @@ function buildLeadEmail(lead) {
     `Адрес: ${lead.address}`,
     `Описание проблемы: ${lead.issue}`,
     `Номер телефона: +${lead.phone}`,
+    `Согласие на обработку персональных данных: получено, ${sentAt}`,
     `Дата и время отправки: ${sentAt}`
   ].join("\n");
 

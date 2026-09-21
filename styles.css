@@ -486,3 +486,43 @@ h1 {
     gap: 20px;
   }
 }
+
+.policy {
+  max-width: 72ch;
+  padding: 48px 0 64px;
+}
+
+.policy h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 24px;
+}
+
+.policy h2 {
+  margin: 32px 0 12px;
+  font-size: 1.2rem;
+}
+
+.policy p,
+.policy li {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.policy ol,
+.policy ul {
+  padding-left: 20px;
+}
+
+.policy__back {
+  display: inline-block;
+  margin: 24px 0;
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
