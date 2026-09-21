@@ -121,6 +121,16 @@
               <p class="form-field__error" id="phone-error" aria-live="polite"></p>
             </div>
 
+            <fieldset>
+              <label for="consent">
+                <input id="consent" name="consent" type="checkbox" required aria-describedby="consent-error" />
+                Я даю согласие на
+                <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">обработку персональных данных</a>
+                в соответствии с политикой конфиденциальности
+              </label>
+              <p class="form-field__error" id="consent-error" aria-live="polite"></p>
+            </fieldset>
+
             <button class="lead-form__submit" type="submit" disabled>Отправить</button>
             <p class="lead-form__status" id="form-status" aria-live="polite" data-state="idle"></p>
           </form>
@@ -180,6 +190,9 @@
           <p class="footer__text">
             Адрес: г. Нефтеюганск, 15-й микрорайон, д. 2
           </p>
+          <ul class="footer__links">
+            <li><a href="/privacy-policy.html">Политика обработки персональных данных</a></li>
+          </ul>
         </div>
       </div>
 

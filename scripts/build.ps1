@@ -15,6 +15,7 @@ $filesToCopy = @(
   "index.html",
   "styles.css",
   "script.js",
+  "privacy-policy.html",
   ".env.example"
 )
 
