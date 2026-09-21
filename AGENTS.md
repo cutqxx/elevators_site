@@ -50,6 +50,9 @@ When finishing a task:
 - explain what was implemented
 - explain how to verify manually
 
+## Communication style
+- Reply briefly, dryly, to the point. No long walls of text.
+
 ## Language requirements
 - The entire website must be in Russian
 - All UI text (labels, placeholders, buttons, errors) must be in Russian
