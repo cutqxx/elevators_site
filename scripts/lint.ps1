@@ -44,7 +44,7 @@ $checks = @(
   @{ Pattern = '/api/lead'; Source = "script.js"; Message = "Missing form submit endpoint" },
   @{ Pattern = 'isSubmitting'; Source = "script.js"; Message = "Missing duplicate submit protection" },
   @{ Pattern = 'subject:'; Source = "api/lead.js"; Message = "Missing email subject" },
-  @{ Pattern = 'RESEND_API_KEY'; Source = "api/lead.js"; Message = "Missing server env usage" },
+  @{ Pattern = 'SMTP_HOST'; Source = "api/lead.js"; Message = "Missing server env usage" },
   @{ Pattern = 'response\.status\(400\)'; Source = "api/lead.js"; Message = "Missing server validation response" },
   @{ Pattern = 'PHONE_PATTERN'; Source = "api/lead.js"; Message = "Missing phone validation on server" },
   @{ Pattern = 'loadEnvFile'; Source = "server.js"; Message = "Missing .env loading in local server" },

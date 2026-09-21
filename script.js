@@ -4,6 +4,7 @@ const addressInput = document.querySelector("#address");
 const issueInput = document.querySelector("#issue");
 const phoneInput = document.querySelector("#phone");
 const websiteInput = document.querySelector("#website");
+const consentInput = document.querySelector("#consent");
 const submitButton = document.querySelector(".lead-form__submit");
 const statusElement = document.querySelector("#form-status");
 const defaultSubmitLabel = "Отправить";
@@ -13,7 +14,8 @@ const errorElements = {
   name: document.querySelector("#name-error"),
   address: document.querySelector("#address-error"),
   issue: document.querySelector("#issue-error"),
-  phone: document.querySelector("#phone-error")
+  phone: document.querySelector("#phone-error"),
+  consent: document.querySelector("#consent-error")
 };
 
 const phoneMaskTemplate = "+7 (___) ___-__-__";
@@ -146,6 +148,10 @@ function getIssueError() {
   return "";
 }
 
+function getConsentError() {
+  return consentInput.checked ? "" : "Необходимо согласие на обработку персональных данных";
+}
+
 function setFieldError(input, key, message) {
   input.setAttribute("aria-invalid", message ? "true" : "false");
   errorElements[key].textContent = message;
@@ -172,13 +178,15 @@ function validateForm() {
   const addressError = getAddressError();
   const issueError = getIssueError();
   const phoneError = getPhoneError();
+  const consentError = getConsentError();
 
   setFieldError(nameInput, "name", nameError);
   setFieldError(addressInput, "address", addressError);
   setFieldError(issueInput, "issue", issueError);
   setFieldError(phoneInput, "phone", phoneError);
+  setFieldError(consentInput, "consent", consentError);
 
-  const isValid = !nameError && !addressError && !issueError && !phoneError;
+  const isValid = !nameError && !addressError && !issueError && !phoneError && !consentError;
   submitButton.disabled = isSubmitting || !isValid;
 
   return isValid;
@@ -216,6 +224,11 @@ phoneInput.addEventListener("input", () => {
 
     validateForm();
   });
+});
+
+consentInput.addEventListener("change", () => {
+  validateForm();
+  clearStatus();
 });
 
 phoneInput.addEventListener("keydown", (event) => {
@@ -269,6 +282,10 @@ function applyServerErrors(errors) {
   if (typeof errors.phone === "string") {
     setFieldError(phoneInput, "phone", errors.phone);
   }
+
+  if (typeof errors.consent === "string") {
+    setFieldError(consentInput, "consent", errors.consent);
+  }
 }
 
 form.addEventListener("submit", async (event) => {
@@ -297,7 +314,8 @@ form.addEventListener("submit", async (event) => {
         address: addressInput.value.trim(),
         issue: issueInput.value.trim(),
         phone: phoneInput.value.trim(),
-        website: websiteInput.value
+        website: websiteInput.value,
+        consent: consentInput.checked
       })
     });
 

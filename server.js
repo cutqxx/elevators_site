@@ -15,7 +15,8 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8"
+  ".json": "application/json; charset=utf-8",
+  ".woff2": "font/woff2"
 };
 
 const server = createServer(async (request, response) => {
@@ -50,6 +51,38 @@ function applySecurityHeaders(response) {
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("X-Frame-Options", "DENY");
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  response.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self'",
+      "font-src 'self'",
+      "img-src 'self' data:",
+      "connect-src 'self'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "object-src 'none'"
+    ].join("; ")
+  );
+
+  response.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+  );
+
+  response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+
+  // Игнорируется браузером при обычном HTTP (как сейчас в локальной
+  // разработке) и начинает действовать сама, как только сайт реально
+  // окажется на HTTPS в проде.
+  response.setHeader(
+    "Strict-Transport-Security",
+    "max-age=15552000; includeSubDomains"
+  );
 }
 
 const MAX_BODY_BYTES = 10 * 1024;
